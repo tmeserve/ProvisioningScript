@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Installing a Virtual Environment
 #### Reference : https://virtualenv.pypa.io/en/stable/installation/
 
@@ -48,6 +49,9 @@ To stop the virtual session
 ```console
 deactivate
 ```
+=======
+# ProvisioningScript
+>>>>>>> c0217726823e210855174115fc2c5edd6c1bca9e
 =======
 # ProvisioningScript
 >>>>>>> c0217726823e210855174115fc2c5edd6c1bca9e
