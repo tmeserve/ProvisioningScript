@@ -1,0 +1,4 @@
+baudrate=115200
+apn=c1.korem2m.com
+server=gps1.engenx.com
+port=1721

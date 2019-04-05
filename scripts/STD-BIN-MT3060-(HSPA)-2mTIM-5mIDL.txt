@@ -1,0 +1,229 @@
+############################################################################
+###
+### Enfora Configuration Script - Standard Script - Binary, 2 Minute Timer, 5 Minute Idle
+###
+### Devices: Enfora MT-3060
+###
+### (C) 2012 CP Handheld Technologies
+###
+### History:
+###
+###		05/26/16	JMN	Genesis (Copied MT-3050)
+###
+############################################################################
+
+>AT&F
+<OK
+>ATE0
+<OK
+>AT&W
+<OK
+
+
+### Set the device for Full Functionality
+#
+#>AT+CFUN=1,0
+#<OK
+
+
+### Enable auto GPRS registration
+ 
+>AT$AREG=2
+<OK
+
+### Set the APN for the device .. i.e., c1.korem2m.com
+
+>AT+CGDCONT=1,"IP","{APN}"
+<OK
+
+### Set the DeviceId .. i.e., 20000001
+
+>AT$MDMID="{DEVICEID}"
+<OK
+
+
+### Add the server and port to the friend/report list .. i.e., 63.87.213.134
+
+>AT$FRIEND=1,1,"{SERVER}",{PORT},2
+<OK
+
+
+### Wakeup config
+### - Wakeup/keepalive every 15 minutes
+### - Retry wakeup 6 times, 20 seconds apart (totaling 2 minutes)
+### - If no ACK received from server, drop network and reattach
+### - Send WAKEUP in Binary format
+
+>AT$ACKTM=6,20,1               
+<OK  
+>AT$WAKEUP=2,15            
+<OK 
+>AT$EVDEL=0D
+<OK
+>AT$EVENT=0,3,41,255,4194307
+<OK
+
+
+
+### Add hardware reset instead of timed AT$RESET
+>AT$HBRST=6,1
+<OK
+
+
+### Add check for GPS Quality
+>AT$GPSQUAL=1,0
+<OK
+
+
+### Add the timed GPS event
+### - Send GPS position every 60 minutes, regardless of ignition
+### - Save timer value across reset
+
+>AT$EVENT=11,1,13,1,1
+<OK
+>AT$EVENT=11,3,41,51,947519439
+<OK
+>AT$EVTIM2=3600
+<OK
+>AT$ETSAV2=1
+<OK
+
+
+### Add the timed GPS event 
+### - Send GPS position every 2 minutes
+
+>AT$EVENT=12,1,14,1,1
+<OK
+>AT$EVENT=12,2,178,1,1
+<OK
+>AT$EVENT=12,3,40,71,947519439
+<OK
+>AT$EVTIM3=120
+<OK
+
+
+### Add the Ignition Off/On Events
+### - Ignition debounce of 1 second
+### - Send GPRMC on ignition off/on
+### - Output events must be ACKnowledged (output event 41)
+
+>AT$IGNDBNC=1
+<OK
+>AT$EVENT=14,0,178,0,0
+<OK
+>AT$EVENT=14,3,41,73,947519439
+<OK
+>AT$EVENT=15,0,178,1,1
+<OK
+>AT$EVENT=15,3,41,74,947519439
+<OK
+
+
+### Add Engine Hours Report
+>AT$EVTIM5=6
+<OK
+>AT$EVENT=99,1,66,1,1
+<OK
+>AT$EVENT=99,2,178,1,1
+<OK
+>AT$EVENT=99,3,126,0,6
+<OK
+>AT$EVENT=60,1,178,0,0
+<OK
+>AT$EVENT=60,3,41,80,2153775315
+
+### Add the Idle event
+### - Report when still for 3 seconds
+### - Ignition must be on
+### - Output events must be ACKnowledged (output event 41)
+>AT$OBDIDL=2,3,3
+<OK
+>AT$EVENT=16,1,171,1,1
+<OK
+>AT$EVENT=16,3,41,75,947519439
+<OK
+>AT$EVENT=17,1,171,0,0
+<OK
+>AT$EVENT=17,3,41,76,947519439
+<OK
+
+
+### Add the SMS event
+### - Report when device receives SMS from user
+### - Output events must be ACKnowledged (output event 41)
+
+>AT$EVENT=18,1,52,1,1
+<OK
+>AT$EVENT=18,3,41,7,947519439
+<OK
+
+
+
+### Add the OBD unplugged event
+### - Report when device is unplugged
+### - Output events must be ACKnowledged (output event 41)
+
+>AT$EVENT=19,1,63,0,0
+<OK
+>AT$EVENT=19,3,41,81,7995339
+<OK
+
+
+### NOT USING THESE RIGHT NOW...
+### Add the right turn and left turn events
+### - Report when device turns left or right
+### - Output events are not ACKnowledged (output event 40)
+### >AT$OBDALT=1,150,1,2
+### <OK
+### >AT$OBDART=1,150,1,2
+### <OK
+
+### >AT$EVENT=20,1,205,1,1
+### <OK
+### >AT$EVENT=20,3,40,82,947519439
+### <OK
+### >AT$EVENT=21,1,207,1,1
+### <OK
+### >AT$EVENT=21,3,40,83,947519439
+### <OK
+
+
+
+
+### Use OBD speed in place of GPS Speed
+>AT$OBDGSP=1
+<OK
+
+
+### Makes sure that the protocol discovery type is set to auto discover.
+>AT$OBDDSC=255,1
+<OK
+
+### command no longer works with this model
+### Sleep While Parked (Power Save)
+### - Turn off
+###
+###>AT$PWRSAV=0,0,0
+###<OK
+
+
+### Reset GPS chip every hour
+
+>AT$GPSRST=6
+<OK
+
+
+### Set sleep timer to 2
+
+>AT%SLEEP=2
+<OK
+
+
+### Write the settings to memory
+>AT&W
+<OK
+
+
+### Write OBD settings to memory
+>AT$OBDSAV
+<OK
