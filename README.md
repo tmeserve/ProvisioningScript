@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 ## Installing a Virtual Environment
 #### Reference : https://virtualenv.pypa.io/en/stable/installation/
 
