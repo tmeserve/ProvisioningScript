@@ -203,7 +203,7 @@ if __name__ == '__main__':
             if configDeviceLocNumber in devicesToSelect:
                 device = devicesToSelect.get(configDeviceLocNumber)
                 inp4 = False
-        printerDevice = input("Please enter the name of the printer.")
+        printerDevice = input("Please enter the name of the printer. ")
         while inp8:
             labelsToPrint = input("Please enter a number for the amount of labels to print. ")
             if labelsToPrint.isdigit():
