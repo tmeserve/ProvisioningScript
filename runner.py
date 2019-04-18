@@ -1,5 +1,5 @@
 import glob, sys, provisioning, serial, os, time
-from constants import (AccountID, GroupId, cursor, cwd, 
+from constants import (AccountID, GroupId, cursor, 
 baudrate, apn, server, port, setThreshold, idlethreshold)
 from sql import (GetLastDeviceIdByRange, InsertInitialAsset,
 InsertInitialDevice, UpdateDeviceProvisioned, Aurora_InsertNote,
@@ -7,6 +7,8 @@ GetDeviceByDeviceId)
 import datetime
 import asyncio
 import ftplib
+from printing import printlabel
+import xml.etree.ElementTree as ET
 
 lastDeviceID = -1
 
@@ -80,29 +82,36 @@ def dictToDict(diction, dicttoconvert):
         count += 1
     return dicttoconvert
 
-# Uploads the file to the ftp server before moving on
-@asyncio.coroutine
-async def uploadFileToFTP(fileName, fileobj):
-    print("Before")
-    await ftp.storbinary('STOR {0}'.format(fileName), fileobj)
-    print("After")
-
 if __name__ == '__main__':
     cwd = os.getcwd()
+    if os.path.isfile(cwd + "/preferences.xml"):
+        root = ET.parse(cwd + "/preferences.xml").getroot()
+        tree = ET.ElementTree(root)
+    else:
+        root = ET.Element("preferences")
+        root.set('config-port', "")
+        root.set('printer-port', "")
+        root.set('label-copies', "1")
+        tree = ET.ElementTree(root)
+        # root.close()s
+        tree.write(cwd + "/preferences.xml")
+        root = tree.getroot()
     pathToCreate = cwd + "/uploadFiles"
     if not os.path.isdir(pathToCreate):
         os.mkdir(pathToCreate)
+    
     extension = ".config.txt"
     fileNameTmp = "tmpLog" + extension
     fileToCreate = pathToCreate + "/" + fileNameTmp
-    provisioning.getFirmware(fileToCreate)
-    provisioning.getPackage(fileToCreate)
     inp1 = True
     inp2 = True
     inp3 = True
     inp4 = True
     inp5 = True
     inp6 = True
+    inp7 = True
+    inp8 = True
+    isNew = False
     scripts = {"scripts" : []}
     params = {"params": []}
     scriptsToSelect = {}
@@ -119,7 +128,7 @@ if __name__ == '__main__':
     initials = input("Please input your initials. ")
 
     while inp1:
-        inp = input("Is it a new or existing device? Type exit to exit the script.")
+        inp = input("Is it a new or existing device? ")
         if inp.lower() == "new":
             model = ""
             while inp2:
@@ -145,20 +154,26 @@ if __name__ == '__main__':
                     inp6 = False
                 else:
                     print("Please input a valid ICCID.")
+            fileToUpload = open(fileToCreate, 'a')
+            fileToUpload.write("Creating new device - {0}.\r\n".format(deviceid))
             InsertInitialDevice(deviceid, imei, iccid)
+            fileToUpload.write("Creating new asset.\r\n")
             InsertInitialAsset(deviceid)
             text = "Device " + str(deviceid) + " created.\r\nAccount: CP Stock\r\n Group: STOCK\r\nIMEI: " + str(imei) + "\r\nICCID: " + str(iccid) + "\r\n"
+            fileToUpload.write("Aurora Note Added.\r\n")
             Aurora_InsertNote(deviceid, initials, text)
+            fileToUpload.close()
+            isNew = True
         elif inp.lower() == "existing":
             deviceid = input("Please enter the deviceid. ")
-            device = GetDeviceByDeviceId(deviceid)
+            deviceInfo = GetDeviceByDeviceId(deviceid)
             print("The account name is {0}.\nThe group name is {1}.\nThe IMEI is {2}."
-                .format(device[0][0], device[0][1], device[0][6]))
+                .format(deviceInfo[0][0], deviceInfo[0][1], deviceInfo[0][6]))
             isCorrect = input("Is that correct so far? ")
-
+            imei = deviceInfo[0][6]
             if isCorrect.lower() == 'yes':
-                print("The ICCID is {0}".format(device[0][7]))
-                iccidCorrect = input("Is the ICCID correct?")
+                print("The ICCID is {0}".format(deviceInfo[0][7]))
+                iccidCorrect = input("Is the ICCID correct? ")
                 if iccidCorrect.lower() == 'no':
                     while inp6:
                         iccid = input("Please enter the ICCID for the device. ")
@@ -180,16 +195,29 @@ if __name__ == '__main__':
                         inp1 = True
         else:
             print("Please enter either new or existing.")
-    devices = getDeviceLocation()
-    devicesToSelect = dictToDict(devices, devicesToSelect)
-    while inp4:
-        deviceLocNumber = input("Please enter a number corresponding to the wanted device. ")
-        if deviceLocNumber in devicesToSelect:
-            device = devicesToSelect.get(deviceLocNumber)
-            inp4 = False
-    
-    script = getDir("scripts")
+    if not root.attrib.get("config-port") and not root.attrib.get("printer-port"):
+        devices = getDeviceLocation()
+        devicesToSelect = dictToDict(devices, devicesToSelect)
+        while inp4:
+            configDeviceLocNumber = input("Please enter a number corresponding to the wanted COM Port for the config device. ")
+            if configDeviceLocNumber in devicesToSelect:
+                device = devicesToSelect.get(configDeviceLocNumber)
+                inp4 = False
+        printerDevice = input("Please enter the name of the printer.")
+        while inp8:
+            labelsToPrint = input("Please enter a number for the amount of labels to print. ")
+            if labelsToPrint.isdigit():
+                inp8 = False
 
+        root.set('config-port', device)
+        root.set('printer-port', printerDevice)
+        root.set('label-copies', labelsToPrint)
+        tree.write(cwd + "/preferences.xml")
+    else:
+        device = root.attrib.get("config-port")
+        printerDevice = root.attrib.get("printer-port")
+        labelsToPrint = root.attrib.get("label-copies")
+    script = getDir("scripts")
     filesInDir = []
     for f in os.listdir(script):
         path = os.path.join(script, f)
@@ -236,22 +264,29 @@ if __name__ == '__main__':
             print("\nPlease enter a number between {1} and {0}."
                 .format(paramsFileNumberBottom, paramsFileNumberTop))
     
+    provisioning.getFirmware(fileToCreate, device)
+    provisioning.getPackage(fileToCreate, device)
     result = provisioning.Run(device, scriptFile, deviceid, paramsFile, fileToCreate)
     if result == 1:
         datenow =  datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         logFileName = str(deviceid) + "-" + datenow + extension
-        fileToRename = open(fileToCreate, "rb")
+        fileToRename = open(fileToCreate, "a")
+        scriptFileStripped = scriptFile.split("/")
+        fileToRename.write("Updating device post-provisioning.\r\n")
+        UpdateDeviceProvisioned(datenow, deviceid, apn, server, port, scriptFileStripped[-1], logFileName)
+        text = "Device " + str(deviceid) + " configured. <a target=\"_blank\" href=\"http://www.cphandheld.com/VectorConfigWS/ConfigLogs/" + logFileName + "\">View File</a>"
+        fileToRename.write("Aurora Note Added.\r\n")
+        Aurora_InsertNote(deviceid, initials, text)
+        if isNew:
+            printlabel(printerDevice, str(deviceid), str(imei))
+            fileToRename.write("Label Printed")
+        fileToRename.write("Sending log file via ftp.\r\n")
         fileToRename.close()
         os.rename(fileToCreate, pathToCreate + "/" + logFileName)
-        print(logFileName, " is log file name")
         fileToUpload = open(pathToCreate + "/" + logFileName, 'rb')
-        # asyncio.run(uploadFileToFTP(logFileName, fileToUpload))
         ftp = ftplib.FTP('ftp.cphandheld.com', 'provisioning', 'ProvFtp$')
         ftp.storbinary('STOR {0}'.format(logFileName), fileToUpload)
         time.sleep(1)
         fileToUpload.close()
         ftp.close()
-        UpdateDeviceProvisioned(datenow, deviceid, apn, server, port, fileToUpload, logFileName)
-        text = "Device " + str(deviceid) + " configured. <a target=\"_blank\" href=\"http://www.cphandheld.com/VectorConfigWS/ConfigLogs/" + logFileName + "\">View File</a>"
-        Aurora_InsertNote(deviceid, initials, text)
         print("Fully completed provisioning and device set up.")

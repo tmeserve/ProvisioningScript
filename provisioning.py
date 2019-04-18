@@ -44,11 +44,7 @@ def handler(cmds, fileName):
     error_count = 0
     escape_loop = False
     # check to see if serial is already open if so close
-    if (ser.isOpen()):
-        ser.close()
-
-    # open serial
-    ser.open()
+    
     fileOpened = open(fileName, 'a')
     for key in cmds["cfg"]:
         tmp_buffer = b""
@@ -66,13 +62,14 @@ def handler(cmds, fileName):
             continue
         
         # send command to modem
-        fileOpened.write("SND: {0}\r\n".format(cmd))
         send(cmd)
+        if cmd == "AT\r":
+            ""
+        else:
+            fileOpened.write("SND: {0}\r\n".format(cmd))
         # Reset start_time
         start_time = time.time()
-
         while(True):
-
             if (escape_loop == True):
                 break
             
@@ -86,17 +83,13 @@ def handler(cmds, fileName):
                 # TODO: refactor to read all bytes in serial buffer
                 tmp_char = ser.read(1)
                 if(tmp_char == b'\r'):
-                    # if tmp_buffer.decode() == cmd.replace('\r', "") or not tmp_buffer or tmp_buffer.decode() == '\n':
-                    #     tmp_buffer = b''
-                    #     continue
+                    if not tmp_buffer or tmp_buffer.decode() == '\n':
+                        tmp_buffer = b''
+                        continue
                     # parse the accumulated buffer
                     if not (len(tmp_buffer) > 0):
                         continue
-                    # elif (tmp_buffer.find('\n') > -1):
-                    #     continue
 
-                    print("tmp_buffer {0}".format(tmp_buffer).encode())
-                    print("rsp.encode() {0}".format(rsp.encode()).encode())
                     result = parse(tmp_buffer, rsp.encode())
                     print ('received ', tmp_buffer)
                     if tmp_buffer.count(b'.') == 3:
@@ -114,26 +107,24 @@ def handler(cmds, fileName):
                             callbackFunc(result)
                         # Escape time timeout loop
                         escape_loop = True
-                        break
                     else:
                         error_count += 1
                         # print("error: cmd: ", cmd, " rsp: ", result.Data)
-                    
-                    tmp_buffer = tmp_buffer.decode().replace('\n', "")
-                    tmp_buffer = tmp_buffer.replace('\r', "")
-                    fileOpened.write("RCV: {0}\r\n".format(tmp_buffer))
-                    tmp_buffer= b""
+                    if cmd == "AT\r":
+                        tmp_buffer = b''
+                        continue
+                    else:
+                        print("tmp_buffer before: {0}".format(tmp_buffer))
+                        tmp_buffer = tmp_buffer.decode().replace('\n', "")
+                        tmp_buffer = tmp_buffer.replace('\r', "")
+                        print("tmp_buffer: {0}".format(tmp_buffer))
+                        fileOpened.write("RCV: {0}\r\n".format(tmp_buffer))
+                        tmp_buffer= b""
                 else:
                     tmp_buffer += tmp_char
                 
             # let outer while loop breathe
             time.sleep(.005)
-
-    # close the port
-    if (ser.isOpen()):
-        fileOpened.write("Closing port.\r\n")
-        ser.close()
-    
     fileOpened.close()
 
 def parse(result, expect):
@@ -152,6 +143,7 @@ def parse(result, expect):
 Write command to device
 """
 def send(cmd):
+    # Debug
     # print('sending command: ', cmd)
     # print(cmd.encode())
     ser.write(cmd.encode())
@@ -159,32 +151,22 @@ def send(cmd):
 def modemDataReceived(data):
     print('Callback function modemDataReceived ', data)
 
-def getFirmware(fileName):
-    cmds = {"cfg": [["AT+CGMR\r", "OK"]]}
+def getFirmware(fileName, device):
+    cmds = {"cfg": [["AT\r", "OK"], ["AT+CGMR\r", "OK"]]}
     fileOpened = open(fileName, "a")
     global ser
     if ser == None:
+        ser = Serial(device, baudrate=115200, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
         fileOpened.write("Port opened.\r\n")
-        ser = Serial("/dev/tty.UC-232AC", baudrate=115200)
+    fileOpened.write("## Get Firmware Version.\r\n")
+    fileOpened.close()
     handler(cmds, fileName)
-    if ser.isOpen():
-        fileOpened.write("Closing Port.")
-        ser.close()
-        fileOpened.close()
-    ser = None
 
-def getPackage(fileName):
+def getPackage(fileName, device):
     fileOpened = open(fileName, 'a')
     cmd = "AT$PKG?\r"
-    fileOpened.write("## Get Firmware Version\r\n")
+    fileOpened.write("### Get Package.\r\n")
     fileOpened.write("SND: {0}\r\n".format(cmd.strip('\r')))
-    global ser
-    if ser == None:
-        ser = Serial("/dev/tty.UC-232AC", baudrate=115200)
-    if ser.isOpen():
-        ser.close()
-    fileOpened.write("Port opened.\r\n")
-    ser.open()
     send(cmd)
     time.sleep(.05)
     tmp_buffer = b""
@@ -219,10 +201,6 @@ def getPackage(fileName):
             tmp_buffer = b''
         else:
             tmp_buffer += char
-    if ser.isOpen():
-        fileOpened.write("Closing port.\r\n")
-        ser.close()
-    ser = None
     setPackage(result)
     fileOpened.close()
 
@@ -234,36 +212,12 @@ def parse_script(script):
     count = 0
     while count < len(fileLines):
         line = fileLines[count]
-        # if line.startswith(">") and line2.startswith("<"):
-        #     line = line.replace(">", "")
-        #     line2 = line2.replace("<", "")
-        #     if "{APN}" in line:
-        #         line = line.replace("{APN}", apn)
-        #     elif "{DEVICEID}" in line:
-        #         line = line.replace("{DEVICEID}", deviceid)
-        #         # for id in deviceid:
-        #         #     line2 = line2.replace("{DEVICEID}", id)
-        #         #     line2 = line2.strip() + '\r'
-        #         #     scriptdict["cfg"].append([line2, "OK"])
-        #         # continue
-        #     elif "{SERVER}" in line and "{PORT}" in line:
-        #         line = line.replace("{SERVER}", server)
-        #         line = line.replace("{PORT}", port)
-            
-        #     line = line.strip() + '\r'
-        #     line2 = line2.strip()
-        #     scriptdict["cfg"].append([line, line2])
         if line.startswith(">"):
             line = line.replace(">", "")
             if "{APN}" in line:
                 line = line.replace("{APN}", apn)
             elif "{DEVICEID}" in line:
                 line = line.replace("{DEVICEID}", deviceid)
-                # for id in deviceid:
-                #     line2 = line2.replace("{DEVICEID}", id)
-                #     line2 = line2.strip() + '\r'
-                #     scriptdict["cfg"].append([line2, "OK"])
-                # continue
             elif "{SERVER}" in line and "{PORT}" in line:
                 line = line.replace("{SERVER}", server)
                 line = line.replace("{PORT}", port)
@@ -271,6 +225,7 @@ def parse_script(script):
             line = line.strip() + '\r'
             scriptdict["cfg"].append([line])
         elif line.startswith("<"):
+            line = line.strip()
             scriptdict["cfg"][-1].append(line.replace("<", ""))
         elif line.startswith("#"):
             scriptdict["cfg"].append([line, "COMMENT"])
@@ -319,23 +274,23 @@ def Run(_device, _script, _deviceid, _params, fileName):
     
     print("Finished parsing the arguments and params file.")
 
+    # Debug
     # device = "/dev/cu.UC-232AC"
     cfg = {"cfg": [["ATE0\r", "OK"], ["AT\r", "OK"], ["AT\r", "OK"]]}
     cfg1 = {"cfg": [["AT\r", "OK"]]}
-    global ser
-    ser = Serial(device, baudrate=115200, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
-
+    
     callbackFunc = modemDataReceived
 
     scriptdict = parse_script(script)
+    # Debug
     # print(scriptdict)
     handler(scriptdict, fileName)
 
     if ser.isOpen():
         fileOpened = open(fileName, "a")
-        fileOpened.write("Port Opened.\r\n")
+        fileOpened.write("Port Closed.\r\n")
         fileOpened.close()
         ser.close()
-    print("Exiting App...")
+    print("Exiting Provisioning Portion...")
 
     return 1

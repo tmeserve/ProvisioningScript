@@ -1,12 +1,15 @@
+Creating new device - 41000511.
+Creating new asset.
+Aurora Note Added.
 Port opened.
+## Get Firmware Version.
 SND: AT+CGMR
 RCV: 20.2.2.56
-Closing port.
-## Get Firmware Version
+RCV: OK
+### Get Package.
 SND: AT$PKG?
 RCV: 2-D8
 RCV: OK
-Closing port.
 ############################################################################
 
 ###
@@ -44,6 +47,7 @@ Closing port.
 #<OK
 
 SND: ATE0
+RCV: OK
 SND: AT&W
 RCV: OK
 ### Set the device for Full Functionality
@@ -64,7 +68,7 @@ SND: AT+CGDCONT=1,"IP","c1.korem2m.com"
 RCV: OK
 ### Set the DeviceId .. i.e., 20000001
 
-SND: AT$MDMID="41000534"
+SND: AT$MDMID="41000511"
 RCV: OK
 ### Add the server and port to the friend/report list .. i.e., 63.87.213.134
 
@@ -240,4 +244,7 @@ RCV: OK
 
 SND: AT&W
 RCV: OK
-Closing port.
+Port Closed.
+Updating device post-provisioning.
+Aurora Note Added.
+Label PrintedSending log file via ftp.

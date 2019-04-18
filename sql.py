@@ -1,5 +1,5 @@
-from constants import (cursor, AccountID, GroupId, idlethreshold,
-firmware, package)
+from constants import (cursor, AccountID, GroupId, getThreshold,
+getFirmware, getPackage)
 import datetime
 
 def GetLastDeviceIdByRange(bottom, top):
@@ -22,7 +22,7 @@ def InsertInitialDevice(deviceid, imei, iccid):
 def InsertInitialAsset(deviceid):
     cmd = """\
         EXEC InsertInitialAsset '{0}', '{1}', {2}, {3}
-        """.format(AccountID, GroupId, deviceid, idlethreshold)
+        """.format(AccountID, GroupId, deviceid, getThreshold())
     cursor.execute(cmd)
 
 def Aurora_InsertNote(deviceid, initials, text):
@@ -48,8 +48,8 @@ def UpdateDeviceProvisioned(datenow, deviceid, apn, server, port, script, logFil
     7 = _LogFileName
     """
     cmd = """\
-        EXEC UpdateDeviceProvisioned {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}
-        """.format(deviceid, apn, server, port, firmware, package, script, _LogFileName)
+        EXEC UpdateDeviceProvisioned {0}, '{1}', '{2}', {3}, '{4}', '{5}', '{6}', '{7}'
+        """.format(deviceid, apn, server, port, getFirmware(), getPackage(), script, _LogFileName)
 
     cursor.execute(cmd)
 

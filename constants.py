@@ -13,8 +13,6 @@ autocommit=True)
 
 cursor = conn.cursor()
 
-cwd = os.getcwd()
-
 baudrate=115200
 apn="c1.korem2m.com"
 server="gps1.engenx.com"
@@ -22,16 +20,28 @@ port=1721
 
 idlethreshold = 0
 
+def getThreshold():
+    global idlethreshold
+    return idlethreshold
+
 def setThreshold(threshold):
     idlethreshold = threshold
 
 firmware = None
+
+def getFirmware():
+    global firmware
+    return firmware
 
 def setFirmware(firm):
     global firmware
     firmware = firm
 
 package = None
+
+def getPackage():
+    global package
+    return package
 
 def setPackage(pack):
     global package
