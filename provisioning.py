@@ -1,7 +1,6 @@
 import time
 import threading
 from serial import Serial
-from multiprocessing import queues
 import sys, getopt
 from constants import (setFirmware, setPackage)
 

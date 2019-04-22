@@ -5,7 +5,6 @@ from sql import (GetLastDeviceIdByRange, InsertInitialAsset,
 InsertInitialDevice, UpdateDeviceProvisioned, Aurora_InsertNote,
 GetDeviceByDeviceId)
 import datetime
-import asyncio
 import ftplib
 from printing import printlabel
 import xml.etree.ElementTree as ET
@@ -41,21 +40,15 @@ def getDeviceLocation():
             pass
     return result
 
-# Useless as of right now but is supposed to rename a file
-def rename_open_file(fileobj, newname):
-    name = fileobj.name
-    mode = fileobj.mode.lower()
-    # posn = fileobj.tell()
-    fileobj.close()
-    os.rename(name, newname)
-    newmode = mode
-    if "w" in mode:      # can't reopen with "w" mode since
-        newmode = "r+"   # it would empty the file; use "r+"
-        if "b" in mode:
-           newmode += "b"
-    fileobj = open(newname, newmode)
-    # fileobj.seek(posn)
-    return fileobj
+def getICCID():
+    inp6 = True
+    while inp6:
+        iccid = input("Please enter the ICCID for the device. ")
+        if len(iccid) == 20:
+            inp6 = False
+        else:
+            print("Please input a valid ICCID.")
+    return iccid
 
 # Gets the directory needed.
 def getDir(folderName):
@@ -126,11 +119,9 @@ if __name__ == '__main__':
     count2 = 1
     count3 = 1
     initials = input("Please input your initials. ")
-
     while inp1:
         inp = input("Is it a new or existing device? ")
         if inp.lower() == "new":
-            model = ""
             while inp2:
                 model = input("Is it an MT-4100 or MT-3060? ")
                 if model.lower() == "mt-4100":
@@ -146,14 +137,7 @@ if __name__ == '__main__':
                     print("Please input either MT-4100 or MT-3060.")
                     continue
             print("The deviceid is: ", deviceid)
-            imei = input("Please enter the IMEI for the device. ")
-            while inp6:
-                iccid = input("Please enter the ICCID for the device. ")
-                if len(iccid) == 20:
-                    inp1 = False
-                    inp6 = False
-                else:
-                    print("Please input a valid ICCID.")
+            iccid = getICCID()
             fileToUpload = open(fileToCreate, 'a')
             fileToUpload.write("Creating new device - {0}.\r\n".format(deviceid))
             InsertInitialDevice(deviceid, imei, iccid)
@@ -186,16 +170,41 @@ if __name__ == '__main__':
                     inp1 = False
             elif isCorrect.lower() == 'no':
                 while inp6:
-                    exit = input("Would you like to exit?")
-                    if exit.lower() == "yes":
+                    exit = input("Would you like to create a new one or exit? Type exit to exit or new to create a new device.")
+                    if exit.lower() == "exit":
                         inp1 = False
                         inp6 = False
-                    elif exit.lower() == 'no':
-                        inp6 = False
-                        inp1 = True
+                    elif exit.lower() == 'new':
+                        while inp2:
+                            model = input("Is it an MT-4100 or MT-3060? ")
+                            if model.lower() == "mt-4100":
+                                inp2 = False
+                                setThreshold(300)
+                                # 41000000
+                                deviceid = GetLastDeviceIdByRange(41000000, 41999999) + 1
+                            elif model.lower() == "mt-3060":
+                                inp2 = False
+                                setThreshold(2)
+                                deviceid = GetLastDeviceIdByRange(42000000, 42999999) + 1
+                            else:
+                                print("Please input either MT-4100 or MT-3060.")
+                                continue
+                        print("The deviceid is: ", deviceid)
+                        iccid = getICCID()
+                        fileToUpload = open(fileToCreate, 'a')
+                        fileToUpload.write("Creating new device - {0}.\r\n".format(deviceid))
+                        InsertInitialDevice(deviceid, imei, iccid)
+                        fileToUpload.write("Creating new asset.\r\n")
+                        InsertInitialAsset(deviceid)
+                        text = "Device " + str(deviceid) + " created.\r\nAccount: CP Stock\r\n Group: STOCK\r\nIMEI: " + str(imei) + "\r\nICCID: " + str(iccid) + "\r\n"
+                        fileToUpload.write("Aurora Note Added.\r\n")
+                        Aurora_InsertNote(deviceid, initials, text)
+                        fileToUpload.close()
+                        isNew = True
         else:
             print("Please enter either new or existing.")
     if not root.attrib.get("config-port") and not root.attrib.get("printer-port"):
+        print("Getting available COM ports to choose from.")
         devices = getDeviceLocation()
         devicesToSelect = dictToDict(devices, devicesToSelect)
         while inp4:
@@ -217,6 +226,13 @@ if __name__ == '__main__':
         device = root.attrib.get("config-port")
         printerDevice = root.attrib.get("printer-port")
         labelsToPrint = root.attrib.get("label-copies")
+        if not labelsToPrint.isdigit():
+            while inp8:
+                labelsToPrint = input("Please enter a number for the amount of labels to print. ")
+                if labelsToPrint.isdigit():
+                    inp8 = False
+                else:
+                    print("Please enter a number.")
     script = getDir("scripts")
     filesInDir = []
     for f in os.listdir(script):
@@ -278,7 +294,7 @@ if __name__ == '__main__':
         fileToRename.write("Aurora Note Added.\r\n")
         Aurora_InsertNote(deviceid, initials, text)
         if isNew:
-            printlabel(printerDevice, str(deviceid), str(imei))
+            printlabel(printerDevice, str(deviceid), str(imei), labelsToPrint)
             fileToRename.write("Label Printed")
         fileToRename.write("Sending log file via ftp.\r\n")
         fileToRename.close()
