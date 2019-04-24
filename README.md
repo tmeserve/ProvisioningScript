@@ -51,7 +51,7 @@ deactivate
 # GPS Provisioning Script
 
 ## To set up
-- Install python 3.7.2
+- Install [python 3.7.2] (https://www.python.org/downloads/release/python-372/)
 
 ### If mac
 - Install CUPS and set up the printer
