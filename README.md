@@ -81,7 +81,7 @@ deactivate
     - Change the Darkness to `24`
     - Click `Set Default Options`
 
-## Once python 3.7.2 is install go to the directory of the script in CMD or Terminal and enter
+## Requirements Installation
 - pip3.7 install -r requirements.txt
 
 ## To set up the printer on windows
