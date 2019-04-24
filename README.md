@@ -74,7 +74,7 @@ deactivate
     - Change the resolution to `300 DPI`
     - Set the media Tracking to `Non-continuous (Web sensing)`
     - Click `Set Default Options`
-- Go to `http://localhost:631/printers`
+- Go to http://localhost:631/printers
   - Click on the name of the printer you just created
   - Where it says `Administration` click there and select `Set Default Options`
   - Click `Printer Settings`
