@@ -1,53 +1,3 @@
-## Installing a Virtual Environment
-#### Reference : https://virtualenv.pypa.io/en/stable/installation/
-
-#### Prerequisites:
-
-Installing PiP
-
-```console
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py`
-
-python get-pip.py --user
-```
-
-### Install virtualenv  
-```console
-pip install --user virtualenv
-```
-
-Create a folder in tesseract/parsers to house the virtual environment (env). Also, specify this project is using python3  
-```console
-virtualenv -p python3 env
-```
-
-Freezing dependencies
-```console
-pip freeze > requirements.txt
-```
-
-Activate environment  
-```console
-. env/bin/activate
-```
-
-Installing dependencies
-```console
-pip install -r requirements.txt
-```
-
-Running the code
-```console
-python3 main.py -device /dev/cu.devicename -baud 115200 -profile kore -script mdm-std-binary
-```
-
-
-
-To stop the virtual session  
-```console
-deactivate
-```
-
 # GPS Provisioning Script
 
 ## Table of contents
@@ -55,6 +5,7 @@ deactivate
 - [Cups Setup](#printermac)
 - [Printer Windows Set up](#printerwin)
 - [Running the Script](#run)
+- [References](#ref)
 - [Extra](#extra)
 
 <div id='requirements'/>
@@ -105,6 +56,11 @@ deactivate
 
 ## Running the Script
 - Type in CMD or Terminal depending on your OS and press enter python3.7 runner.py
+
+<div id='ref'/>
+
+## References
+- [John Cobb](https://github.com/johncobb/cfgmdm)
 
 <div id='extra'/>
 
