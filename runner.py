@@ -86,7 +86,6 @@ if __name__ == '__main__':
         root.set('printer-port', "")
         root.set('label-copies', "1")
         tree = ET.ElementTree(root)
-        # root.close()s
         tree.write(cwd + "/preferences.xml")
         root = tree.getroot()
     pathToCreate = cwd + "/uploadFiles"
@@ -110,7 +109,6 @@ if __name__ == '__main__':
     scriptsToSelect = {}
     devicesToSelect = {}
     paramsToSelect = {}
-    # device = ""
     script = ""
     scriptFile = ""
     paramsFile = ""
@@ -137,7 +135,9 @@ if __name__ == '__main__':
                     print("Please input either MT-4100 or MT-3060.")
                     continue
             print("The deviceid is: ", deviceid)
+            imei = input("Please enter the IMEI for the device. ")
             iccid = getICCID()
+            inp1 = False
             fileToUpload = open(fileToCreate, 'a')
             fileToUpload.write("Creating new device - {0}.\r\n".format(deviceid))
             InsertInitialDevice(deviceid, imei, iccid)
@@ -174,6 +174,7 @@ if __name__ == '__main__':
                     if exit.lower() == "exit":
                         inp1 = False
                         inp6 = False
+                        sys.exit()
                     elif exit.lower() == 'new':
                         while inp2:
                             model = input("Is it an MT-4100 or MT-3060? ")
@@ -190,7 +191,9 @@ if __name__ == '__main__':
                                 print("Please input either MT-4100 or MT-3060.")
                                 continue
                         print("The deviceid is: ", deviceid)
+                        imei = input("Please enter the IMEI for the device. ")
                         iccid = getICCID()
+                        inp1 = False
                         fileToUpload = open(fileToCreate, 'a')
                         fileToUpload.write("Creating new device - {0}.\r\n".format(deviceid))
                         InsertInitialDevice(deviceid, imei, iccid)
@@ -283,7 +286,8 @@ if __name__ == '__main__':
     provisioning.getFirmware(fileToCreate, device)
     provisioning.getPackage(fileToCreate, device)
     result = provisioning.Run(device, scriptFile, deviceid, paramsFile, fileToCreate)
-    if result == 1:
+    finalCheck = provisioning.finalCheck(device, fileToCreate)
+    if result == 1 and finalCheck:
         datenow =  datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         logFileName = str(deviceid) + "-" + datenow + extension
         fileToRename = open(fileToCreate, "a")
@@ -295,7 +299,7 @@ if __name__ == '__main__':
         Aurora_InsertNote(deviceid, initials, text)
         if isNew:
             printlabel(printerDevice, str(deviceid), str(imei), labelsToPrint)
-            fileToRename.write("Label Printed")
+            fileToRename.write("Label Printed.\r\n")
         fileToRename.write("Sending log file via ftp.\r\n")
         fileToRename.close()
         os.rename(fileToCreate, pathToCreate + "/" + logFileName)
@@ -306,3 +310,5 @@ if __name__ == '__main__':
         fileToUpload.close()
         ftp.close()
         print("Fully completed provisioning and device set up.")
+    elif not finalCheck:
+        print("The GPS Signal couldn't be retrieved. Or the cellular lock couldn't be verified.")

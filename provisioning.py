@@ -3,6 +3,8 @@ import threading
 from serial import Serial
 import sys, getopt
 from constants import (setFirmware, setPackage)
+import datetime
+from decimal import Decimal
 
 class ModemResponse:
     OK = "OK"
@@ -38,6 +40,74 @@ def usage():
     print("-s/--script - script location")
     print("-i/--deviceid - the devices id (separated by commas)")
     print("-p/--params - the params kore file location")
+
+def finalCheck(device, fileName):
+    global ser
+    DECIMALPLACES = Decimal(10) ** -3
+    toReturn = False
+    cellc = 1
+    gpsc = 1
+    gpst = 0
+    cellt = 0
+    if ser == None:
+        ser = Serial(device, baudrate=115200, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
+    
+    if ser.isOpen():
+        ser.close()
+    file = open(fileName, "a")
+    ser.open()
+    tmp_buffer = b""
+    tmp_buffer2 = b""
+    result = ""
+    result2 = ""
+    cellularInProcess = True
+    gpsInProcess = True
+    start = time.process_time()
+    elapsed = time.process_time() - start
+    while (cellularInProcess or gpsInProcess) and elapsed <= start:
+        if cellularInProcess:
+            ser.write(b"AT+CGREG?\r")
+            time.sleep(.05)
+            while ser.in_waiting > 0:
+                char = ser.read(1)
+                if char == b"\r":
+                    result = tmp_buffer.decode().replace("\r", "").replace("\n", "").replace("+CGREG:", "").replace("$CREG:", "").replace("OK", "").strip()
+                    if result.startswith("1,") or result.startswith("5,") or result == "0,5" or result == "0,1":
+                        cellularInProcess = False
+                        cellt = Decimal(time.process_time() - start).quantize(DECIMALPLACES)
+                        file.write("Cell lock @ {0} seconds, with the command running {1} time(s).\r\n".format(cellt, cellc))
+                    tmp_buffer = b''
+                else:
+                    tmp_buffer += char
+                time.sleep(.05)
+            cellc += 1
+        time.sleep(.05)
+        if gpsInProcess:
+            ser.write(b"AT$GPSRD=10\r")
+            time.sleep(.05)
+            while ser.in_waiting > 0:
+                char = ser.read(1)
+                if char == b"\r":
+                    result2 = tmp_buffer2.decode()
+                    if result2[8:14].isdigit():
+                        gpst = Decimal(time.process_time() - start).quantize(DECIMALPLACES)
+                        file.write("GPS Signal @ {0} seconds, with the command running {1} time(s)\r\n".format(gpst, gpsc))
+                        gpsInProcess = False
+                    tmp_buffer2 = b''
+                else:
+                    tmp_buffer2 += char
+                time.sleep(.05)
+            gpsc += 1
+        time.sleep(.05)
+        elapsed = time.process_time() - start
+    ser.close()
+    file.close()
+    if elapsed >= start:
+        return False
+    elif not gpsInProcess and not cellularInProcess:
+        return True
+    else:
+        return False
 
 def handler(cmds, fileName):
     error_count = 0
@@ -113,10 +183,8 @@ def handler(cmds, fileName):
                         tmp_buffer = b''
                         continue
                     else:
-                        print("tmp_buffer before: {0}".format(tmp_buffer))
                         tmp_buffer = tmp_buffer.decode().replace('\n', "")
                         tmp_buffer = tmp_buffer.replace('\r', "")
-                        print("tmp_buffer: {0}".format(tmp_buffer))
                         fileOpened.write("RCV: {0}\r\n".format(tmp_buffer))
                         tmp_buffer= b""
                 else:
