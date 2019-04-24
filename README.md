@@ -82,7 +82,7 @@ deactivate
     - Click `Set Default Options`
 
 ## Requirements Installation
-- pip3.7 install -r requirements.txt
+- Type `pip3.7 install -r requirements.txt` and press enter
 
 ## To set up the printer on windows
 
