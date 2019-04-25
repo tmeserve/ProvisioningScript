@@ -23,7 +23,7 @@
 - _Pip usage_
   - *ENTER* in Terminal
     - `cd (directory of the extracted downloaded files)`
-  - **Please note that the text in the parentheses is something you input**
+    - **Please note that the text in the parentheses is something you input**
     - `pip3.7 install -r requirements.txt`
 - Will need an FTP server, an SQL server, and a website ready to show the logs, to store the files, and to store the notes.
 
