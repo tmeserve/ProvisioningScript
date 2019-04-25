@@ -1,5 +1,4 @@
-import os, ftplib
-from ftp import conn
+import os, ftplib, time
 from pyodbc import connect, drivers
 import xml.etree.ElementTree as ET
 
@@ -15,15 +14,27 @@ apn="c1.korem2m.com"
 server="gps1.engenx.com"
 port=1721
 
-idlethreshold = 0
+def setConn(connection):
+    global conn
+    conn = connection
 
 def getCursor():
     global cursor
     return cursor
 
+def setCursor(curs):
+    global cursor
+    cursor = curs
+
 def getFTP():
     global ftp
     return ftp
+
+def setFTP(ft):
+    global ftp
+    ftp = ft
+
+idlethreshold = 0
 
 def getThreshold():
     global idlethreshold
@@ -72,36 +83,38 @@ def setupSQLInformation():
         tree = ET.ElementTree(root)
         tree.write(cwd + '/SQL.xml')
         root = tree.getroot()
-    
     if not root.attrib.get('driver') \
-        and not root.attirb.get('username') \
-        and not root.attirb.get('password') \
-        and not root.attirb.get('server') \
-        and not root.attirb.get('database'):
+        and not root.attrib.get('username') \
+        and not root.attrib.get('password') \
+        and not root.attrib.get('server') \
+        and not root.attrib.get('database'):
         while inp1:
-            print("Please enter the driver you'd like to use for the FTP access.")
+            print("Please enter the driver you'd like to use for the SQL server.")
             print("If you type default it will be:")
             print("{ODBC Driver 17 for SQL Server}")
             print("If you would like a list of available drivers.")
             print("Please type 'list'.")
             print("Otherwise enter another valid driver.")
+            time.sleep(3)
             driverInput = input("Please enter a valid option for the driver.")
             if driverInput.lower() == "list":
                 for driverOption in drivers():
                     print(driverOption)
             elif driverInput.lower() == "default":
-                if "{ODBC Driver 17 for SQL Server}" in drivers():
+                if "ODBC Driver 17 for SQL Server" in drivers():
                     driver = "{ODBC Driver 17 for SQL Server}"
+                    root.set('driver', driver)
                     inp1 = False
                 else:
                     print("Couldn't find the default option:")
                     print("{ODBC Driver 17 for SQL Server}")
                     print("As a valid driver installed.")
             elif driverInput in drivers():
-                driver = driverInput
+                driver = "{" + driverInput + "}"
                 inp1 = False
                 root.set('driver', driver)
-        username = input("Please enter the username to upload to the FTP server. ")
+            time.sleep(2)
+        username = input("Please enter the username to upload to the SQL server. ")
         root.set('username', username)
         password = input("Please enter the password for the database. ")
         root.set('password', password)
@@ -110,21 +123,23 @@ def setupSQLInformation():
         database = input("Please enter the name of the database you want to upload the files to. ")
         root.set('database', database)
         tree.write(cwd + "/SQL.xml")
-        conn = connect(driver=driver,
+        setToCon = connect(driver=driver,
                     uid=username,
                     password=password,
                     server=server,
                     database=database,
                     autocommit=True)
-        cursor = conn.cursor()
+        setConn(setToCon)
+        setCursor(setToCon.cursor())
     else:
-        conn = connect(driver=root.attirb.get('driver'),
-                uid=root.attirb.get('username'),
-                password=root.attirb.get('password'),
-                server=root.attirb.get('server'),
-                database=root.attirb.get('database'),
+        setToCon = connect(driver=root.attrib.get('driver'),
+                uid=root.attrib.get('username'),
+                password=root.attrib.get('password'),
+                server=root.attrib.get('server'),
+                database=root.attrib.get('database'),
                 autocommit=True)
-        cursor = conn.cursor()
+        setConn(setToCon)
+        setCursor(setToCon.cursor())
 
 def setupFTPInformation():
     cwd = os.getcwd()
@@ -142,14 +157,17 @@ def setupFTPInformation():
         root = tree.getroot()
     
     if not root.attrib.get('IP') \
-        and not root.attrib.get('username') \
-        and not root.attrib.get('password'):
-        ip = input("Please enter the IP for the ftp server. ")
-        username = input("Please enter the username for the FTP server. ")
-        password = input("Please enter the password for the FTP server. ")
-        root.set('IP', ip)
-        root.set('username', username)
-        root.set('password', password)
+        or not root.attrib.get('username') \
+        or not root.attrib.get('password'):
+        if not root.attrib.get('IP'):
+            ip = input("Please enter the IP for the ftp server. ")
+            root.set('IP', ip)
+        if not root.attrib.get('username'):
+            username = input("Please enter the username for the FTP server. ")
+            root.set('username', username)
+        if not root.attrib.get('password'):
+            password = input("Please enter the password for the FTP server. ")
+            root.set('password', password)
         tree.write(cwd + "/FTP.xml")
     else:
         ip = root.attrib.get('IP')
