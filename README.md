@@ -11,7 +11,7 @@
 <div id='download'/>
 
 ## How to download the script
-- [Click Here](https://github.com/tmeserve/ProvisioningScript/archive/nocups.zip)
+- [Click Here](https://github.com/tmeserve/ProvisioningScript/archive/nocups.zip) to download the script
 - *EXTRACT* the zip file
   - Will need [7Zip](http://www.7-zip.org/download.html) or [WinRAR](http://www.win-rar.com/download.html)
 
