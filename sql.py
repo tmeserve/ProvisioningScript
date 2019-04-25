@@ -1,6 +1,8 @@
-from constants import (cursor, AccountID, GroupId, getThreshold,
-getFirmware, getPackage)
+from constants import (AccountID, GroupId, getThreshold,
+getFirmware, getPackage, getCursor)
 import datetime
+
+cursor = getCursor()
 
 def GetLastDeviceIdByRange(bottom, top):
     cmd = """\

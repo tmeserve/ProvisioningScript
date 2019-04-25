@@ -1,11 +1,11 @@
 import glob, sys, provisioning, serial, os, time
-from constants import (AccountID, GroupId, cursor, 
-baudrate, apn, server, port, setThreshold, idlethreshold)
+from constants import (AccountID, GroupId, 
+baudrate, apn, server, port, setThreshold, idlethreshold, getFTP,
+setupFTPInformation, setupSQLInformation)
 from sql import (GetLastDeviceIdByRange, InsertInitialAsset,
 InsertInitialDevice, UpdateDeviceProvisioned, Aurora_InsertNote,
 GetDeviceByDeviceId)
 import datetime
-import ftplib
 from printing import printlabel
 import xml.etree.ElementTree as ET
 
@@ -76,7 +76,10 @@ def dictToDict(diction, dicttoconvert):
     return dicttoconvert
 
 if __name__ == '__main__':
+    setupFTPInformation()
+    setupSQLInformation()
     cwd = os.getcwd()
+    ftp = getFTP()
     if os.path.isfile(cwd + "/preferences.xml"):
         root = ET.parse(cwd + "/preferences.xml").getroot()
         tree = ET.ElementTree(root)
@@ -85,9 +88,11 @@ if __name__ == '__main__':
         root.set('config-port', "")
         root.set('printer-port', "")
         root.set('label-copies', "1")
+        root.set('href', "")
         tree = ET.ElementTree(root)
         tree.write(cwd + "/preferences.xml")
         root = tree.getroot()
+    
     pathToCreate = cwd + "/uploadFiles"
     if not os.path.isdir(pathToCreate):
         os.mkdir(pathToCreate)
@@ -226,15 +231,23 @@ if __name__ == '__main__':
             labelsToPrint = input("Please enter a number for the amount of labels to print. ")
             if labelsToPrint.isdigit():
                 inp8 = False
+        
+        print("Please enter the link to access the config logs. ")
+        print("IE: ")
+        print("https://example.com/vector/configlogs")
+        print("Please note that it will add the forward slash for you and the file name. ")
+        href = input("What is the link to access the config logs? ")
 
         root.set('config-port', device)
         root.set('printer-port', printerDevice)
         root.set('label-copies', labelsToPrint)
+        root.set('href', href)
         tree.write(cwd + "/preferences.xml")
     else:
         device = root.attrib.get("config-port")
         printerDevice = root.attrib.get("printer-port")
         labelsToPrint = root.attrib.get("label-copies")
+        href = root.attrib.get("href")
         if not labelsToPrint.isdigit():
             while inp8:
                 labelsToPrint = input("Please enter a number for the amount of labels to print. ")
@@ -302,7 +315,7 @@ if __name__ == '__main__':
         scriptFileStripped = scriptFile.split("/")
         fileToRename.write("Updating device post-provisioning.\r\n")
         UpdateDeviceProvisioned(datenow, deviceid, apn, server, port, scriptFileStripped[-1], logFileName)
-        text = "Device " + str(deviceid) + " configured. <a target=\"_blank\" href=\"http://www.cphandheld.com/VectorConfigWS/ConfigLogs/" + logFileName + "\">View File</a>"
+        text = "Device " + str(deviceid) + " configured. <a target=\"_blank\" href=\"{0}/".format(href) + logFileName + "\">View File</a>"
         fileToRename.write("Aurora Note Added.\r\n")
         Aurora_InsertNote(deviceid, initials, text)
         if isNew:
@@ -312,7 +325,6 @@ if __name__ == '__main__':
         fileToRename.close()
         os.rename(fileToCreate, pathToCreate + "/" + logFileName)
         fileToUpload = open(pathToCreate + "/" + logFileName, 'rb')
-        ftp = ftplib.FTP('ftp.cphandheld.com', 'provisioning', 'ProvFtp$')
         ftp.storbinary('STOR {0}'.format(logFileName), fileToUpload)
         time.sleep(1)
         fileToUpload.close()

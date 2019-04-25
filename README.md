@@ -1,11 +1,19 @@
 # GPS Provisioning Script
 
 ## Table of contents
+- [Download](#download)
 - [Requirements](#requirements)
 - [Mac Printer Setup](#printermac)
 - [Script Usage](#run)
 - [References](#ref)
 - [Extra](#extra)
+
+<div id='download'/>
+
+## How to download the script
+- [Click Here](https://github.com/tmeserve/ProvisioningScript/archive/nocups.zip)
+- *EXTRACT* the zip file
+  - Will need [7Zip](http://www.7-zip.org/download.html) or [WinRAR](http://www.win-rar.com/download.html)
 
 <div id='requirements'/>
 
@@ -14,8 +22,9 @@
   - To install python 3.7.2 on mac go to [here](https://www.youtube.com/watch?v=8BiYGIDCvvA)
 - _Pip usage_
   - *ENTER* in Terminal
-    - cd `directory of the script`
+    - `cd (directory of the extracted downloaded files)`
     - `pip3.7 install -r requirements.txt`
+- Will need an FTP server, an SQL server, and a website ready to show the logs, to store the files, and to store the notes.
 
 <div id='printermac'/>
 
@@ -26,7 +35,7 @@
 
 ## Running the Script
 - *ENTER* in Terminal
-  - cd `directory of the script`
+  - `cd (directory of the extracted downloaded files)`
   - `python3.7 runner.py`
 
 <div id='ref'/>
