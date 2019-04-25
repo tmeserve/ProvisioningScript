@@ -215,7 +215,13 @@ if __name__ == '__main__':
             if configDeviceLocNumber in devicesToSelect:
                 device = devicesToSelect.get(configDeviceLocNumber)
                 inp4 = False
-        printerDevice = input("Please enter the name of the printer. ")
+        while inp7:
+            printerDeviceLocNumber = input("Please enter a number corresponding to the wanted COM Port for the printer. ")
+            if printerDeviceLocNumber in devicesToSelect and not printerDeviceLocNumber == configDeviceLocNumber:
+                printerDevice = devicesToSelect.get(printerDeviceLocNumber)
+                inp7 = False
+            if printerDeviceLocNumber == configDeviceLocNumber:
+                print("Printer and config device number should not be the same. ")
         while inp8:
             labelsToPrint = input("Please enter a number for the amount of labels to print. ")
             if labelsToPrint.isdigit():
@@ -236,6 +242,8 @@ if __name__ == '__main__':
                     inp8 = False
                 else:
                     print("Please enter a number.")
+        root.set("label-copies", labelsToPrint)
+        tree.write(cwd + "/preferences.xml")
     script = getDir("scripts")
     filesInDir = []
     for f in os.listdir(script):
