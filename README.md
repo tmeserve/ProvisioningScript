@@ -25,6 +25,8 @@
     - `cd (directory of the extracted downloaded files)`
     - **Please note that the text in the parentheses is something you input**
     - `pip3.7 install -r requirements.txt`
+- _Drivers_
+  - Install the [drivers](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-2017) according to your operating system.
 - Will need an FTP server, an SQL server, and a website ready to show the logs, to store the files, and to store the notes.
 
 <div id='printermac'/>
