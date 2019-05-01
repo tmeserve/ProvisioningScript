@@ -3,3 +3,4 @@ iso8601==0.1.12
 pyserial==3.4
 PyYAML==5.1
 pyodbc==4.0.26
+virtualenv==16.4.0
