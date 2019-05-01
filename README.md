@@ -7,26 +7,24 @@
 - [Virtual Environment](#venv)
 - [Script Usage](#run)
 - [References](#ref)
-- [Extra](#extra)
+- [Extras](#extra)
 
 <div id='download'/>
 
 ## How to download the script
-- [Click Here](https://github.com/tmeserve/ProvisioningScript/archive/nocups.zip) to download the files
-- *EXTRACT* the zip file
-  - Will need [7Zip](http://www.7-zip.org/download.html) or [WinRAR](http://www.win-rar.com/download.html)
+- *ENTER* in Terminal
+  - `git clone https://github.com/tmeserve/ProvisioningScript.git`
 
 <div id='requirements'/>
 
 ## Prerequisites
 - Install [python 3.7.2](https://www.python.org/downloads/release/python-372/)
-  - To install python 3.7.2 on mac go to [here](https://www.youtube.com/watch?v=8BiYGIDCvvA)
+  - To get help with installing python 3.7.2 on mac go to [here](https://www.youtube.com/watch?v=8BiYGIDCvvA)
 - _Pip usage_
-  - Needs to be run in a [virtual environment](#venv)
-    - **Do this step first as if one of the required python updates and you update it, it very well could mess up the script**
   - *ENTER* in Terminal
-    - Change into the directory of your extracted files
-      - `cd user/yourName/ProvisioningScript-nocups`
+    - Change into the directory of the cloned repository
+      - `console cd user/yourName/ProvisioningScript-nocups`
+      - Needs to be run in a [virtual environment](#venv)
     - `pip3.7 install -r requirements.txt`
 - _Drivers_
   - Install the [drivers](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-2017) according to your operating system.
@@ -42,10 +40,11 @@
 ## Set up a virtual environment
 - *ENTER* in Terminal
   - `pip install --user virtualenv`
-  - Change into the directory of your extracted files
+  - Change into the directory of the cloned repository
     - `cd user/yourName/my-project/`
+  - `pip freeze > requirements.txt`
   - `virtualenv -p python3 my-project`
-  - `path/to/my-project/bin/activate`
+  - `. path/to/my-project/bin/activate`
 - To deactivate the virtualenv
   - *ENTER* in Terminal
     - `deactivate`
@@ -54,8 +53,8 @@
 
 ## Running the Script
 - *ENTER* in Terminal
-  - `cd (directory of the extracted downloaded files)`
-  - **Please note that the text in the parentheses is something you input**
+  - Change into the directory of the cloned repository
+    - `cd user/yourName/my-project`
   - `python3.7 runner.py`
 
 <div id='ref'/>
