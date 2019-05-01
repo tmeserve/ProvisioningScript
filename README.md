@@ -23,7 +23,7 @@
 - _Pip usage_
   - *ENTER* in Terminal
     - Change into the directory of the cloned repository
-      - `console cd user/yourName/ProvisioningScript-nocups`
+      - `cd user/yourName/ProvisioningScript-nocups`
       - Needs to be run in a [virtual environment](#venv)
     - `pip3.7 install -r requirements.txt`
 - _Drivers_
