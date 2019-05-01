@@ -42,7 +42,6 @@
   - `pip install --user virtualenv`
   - Change into the directory of the cloned repository
     - `cd user/yourName/my-project/`
-  - `pip freeze > requirements.txt`
   - `virtualenv -p python3 my-project`
   - `. path/to/my-project/bin/activate`
 - To deactivate the virtualenv
