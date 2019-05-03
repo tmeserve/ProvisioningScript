@@ -63,6 +63,7 @@ def setPackage(pack):
     global package
     package = pack
 
+# Sets up the SQL xml
 def setupSQLInformation():
     cwd = os.getcwd()
     global conn, cursor
@@ -70,10 +71,12 @@ def setupSQLInformation():
     inp2 = True
     inp3 = True
     inp4 = True
+    # Gets the sql xml values
     if os.path.isfile(cwd + "/SQL.xml"):
         root = ET.parse(cwd + "/SQL.xml").getroot()
         tree = ET.ElementTree(root)
     else:
+        # Sets the sql values up
         root = ET.Element('SQL')
         root.set('driver', '')
         root.set('username', '')
@@ -122,37 +125,48 @@ def setupSQLInformation():
         root.set('server', server)
         database = input("Please enter the name of the database you want to upload the files to. ")
         root.set('database', database)
+        # Writes to the file
         tree.write(cwd + "/SQL.xml")
+        # Initializes the connection
         setToCon = connect(driver=driver,
                     uid=username,
                     password=password,
                     server=server,
                     database=database,
                     autocommit=True)
+        # Sets the connection
         setConn(setToCon)
+        # Sets the cursor
         setCursor(setToCon.cursor())
     else:
+        # Initializes the connection
         setToCon = connect(driver=root.attrib.get('driver'),
                 uid=root.attrib.get('username'),
                 password=root.attrib.get('password'),
                 server=root.attrib.get('server'),
                 database=root.attrib.get('database'),
                 autocommit=True)
+        # Sets the connection
         setConn(setToCon)
+        # Sets the cursor
         setCursor(setToCon.cursor())
 
+# Sets up the FTP xml
 def setupFTPInformation():
     cwd = os.getcwd()
     global ftp
+    # Gets the FTP xml files
     if os.path.isfile(cwd + "/FTP.xml"):
         root = ET.parse(cwd + "/FTP.xml").getroot()
         tree = ET.ElementTree(root)
     else:
+        # Sets up the FTP xml values
         root = ET.Element('FTP')
         root.set('IP', '')
         root.set('username', '')
         root.set('password', '')
         tree = ET.ElementTree(root)
+        # Writes to the file
         tree.write(cwd + "/FTP.xml")
         root = tree.getroot()
     
@@ -168,10 +182,12 @@ def setupFTPInformation():
         if not root.attrib.get('password'):
             password = input("Please enter the password for the FTP server. ")
             root.set('password', password)
+        # Writes to the file
         tree.write(cwd + "/FTP.xml")
     else:
         ip = root.attrib.get('IP')
         username = root.attrib.get('username')
         password = root.attrib.get('password')
     
+    # Intializes FTP connection
     ftp = ftplib.FTP(ip, username, password)

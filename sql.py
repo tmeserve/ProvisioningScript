@@ -4,6 +4,7 @@ import datetime
 
 cursor = getCursor()
 
+# Gets the last device id
 def GetLastDeviceIdByRange(bottom, top):
     global cursor
     if cursor == None:
@@ -14,10 +15,11 @@ def GetLastDeviceIdByRange(bottom, top):
     SELECT @DeviceId AS return_value
     """.format(bottom, top)
     cursor.execute(cmd)
-
+    # Sends the command to the sql server
     return_value = cursor.fetchval()
     return return_value
 
+# Inserts a new device
 def InsertInitialDevice(deviceid, imei, iccid):
     global cursor
     if cursor == None:
@@ -25,8 +27,10 @@ def InsertInitialDevice(deviceid, imei, iccid):
     cmd = """\
         EXEC InsertInitialDevice {0}, '{1}', '{2}', '{3}'
         """.format(deviceid, AccountID, imei, iccid)
+    # Sends the command to the sql server
     cursor.execute(cmd)
 
+# Inserts a new asset
 def InsertInitialAsset(deviceid):
     global cursor
     if cursor == None:
@@ -36,6 +40,7 @@ def InsertInitialAsset(deviceid):
         """.format(AccountID, GroupId, deviceid, getThreshold())
     cursor.execute(cmd)
 
+# Inserts a note
 def Aurora_InsertNote(deviceid, initials, text):
     global cursor
     if cursor == None:
@@ -49,6 +54,7 @@ def Aurora_InsertNote(deviceid, initials, text):
         """.format(deviceid, initials, text)
     cursor.execute(cmd)
 
+# Updates a device
 def UpdateDeviceProvisioned(datenow, deviceid, apn, server, port, script, logFileName):
     global cursor
     if cursor == None:
@@ -67,9 +73,10 @@ def UpdateDeviceProvisioned(datenow, deviceid, apn, server, port, script, logFil
     cmd = """\
         EXEC UpdateDeviceProvisioned {0}, '{1}', '{2}', {3}, '{4}', '{5}', '{6}', '{7}'
         """.format(deviceid, apn, server, port, getFirmware(), getPackage(), script, _LogFileName)
-
+    # Sends the command to the sql server
     cursor.execute(cmd)
 
+# Gets the last device by id
 def GetDeviceByDeviceId(deviceid):
     global cursor
     if cursor == None:
@@ -78,6 +85,7 @@ def GetDeviceByDeviceId(deviceid):
         EXEC GetDeviceByDeviceId {0}
         """.format(deviceid)
     
+    # Sends the command to the sql server    
     cursor.execute(cmd)
 
     return_value = cursor.fetchall()
